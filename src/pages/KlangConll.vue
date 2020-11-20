@@ -339,10 +339,14 @@ export default {
           if(!this.admin) this.wasSaved = false;
         }
         const segments = this.segments[anno];
-        if(!isOriginal)
-            this.diffsegments[anno] = segments.map((sent, i) =>
-              Diff.diffWords(original[i], sent)
-            )
+        if(!isOriginal) {
+          this.diffsegments[anno] = segments.map((sent, i) =>
+            Diff.diffWords(original[i], sent)
+          );
+
+          console.log(anno, this.diffsegments[anno], '---------')
+        }
+            
         if (anno != "original" && !this.admin) {
           this.mytrans = segments;
           this.sound = this.conll[anno].sound;
