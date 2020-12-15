@@ -369,7 +369,6 @@ export default {
       currentTime: -1,
       manualct: -1,
       admin: false,
-      showSaved: false,
       sound: null,
       story: null,
       accent: null,
@@ -740,7 +739,6 @@ export default {
 
     onTimeUpdate() {
       if (this.$refs.player == null) return;
-      console.log(this.audioplayer.currentTime)
       if(this.isPlayingLine) {
         if(this.audioplayer.currentTime > this.lineEnd)
           this.audioplayer.currentTime = this.lineStart;

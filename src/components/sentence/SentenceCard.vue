@@ -199,6 +199,19 @@
           v-bind:class="'redo-button'"
         >
         </q-btn>
+        <q-btn
+          v-if="hasSoundUrl"
+          flat
+          round
+          dense
+          icon="ion-play"
+          @click="showPlayBar  = !showPlayBar"
+          v-bind:class="'redo-button'"
+        >
+          <q-tooltip>
+            Click to show/hide play bar
+          </q-tooltip>
+        </q-btn>
       </div>
 
       <div class="full-width row justify-end">
@@ -214,7 +227,13 @@
           </template>
         </q-input>
       </div>
-
+      <div class="full-width row" v-if="showPlayBar">
+        <SentencePlayBar
+          :url="conllSoundTree.sound_url"
+          :sentence="conllSoundTree.sound_tree"
+        >
+        </SentencePlayBar>
+      </div>
       <q-tabs
         v-model="tab"
         :class="
@@ -332,6 +351,7 @@ import TokenDialog from "./TokenDialog.vue";
 import StatisticsDialog from "./StatisticsDialog.vue";
 import MultiEditDialog from "./MultiEditDialog.vue";
 import user from "src/store/modules/user";
+import SentencePlayBar from "./SentencePlayBar.vue";
 
 export default {
   name: "SentenceCard",
@@ -346,6 +366,7 @@ export default {
     TokenDialog,
     StatisticsDialog,
     MultiEditDialog,
+    SentencePlayBar
   },
   props: ["index", "sentence", "sentenceId", "searchResult", "exerciseLevel"],
   data() {
@@ -375,6 +396,13 @@ export default {
       canRedo: false,
       canSave: false,
       hasPendingChanges: {},
+      hasSoundUrl: false,
+      conllSoundTree: {
+        sound_url: "",
+        sound_tree: [],
+        sample_name: ""
+      },
+      showPlayBar: false
     };
   },
 
@@ -439,6 +467,19 @@ export default {
       reactiveSentence.fromConll(conll);
       this.reactiveSentencesObj[userId] = reactiveSentence;
       this.hasPendingChanges[userId] = false;
+      const metaJSON = reactiveSentence.metaJson;
+      if(!this.hasSoundUrl && metaJSON.sound_url) {
+        this.conllSoundTree.sound_url = metaJSON.sound_url;
+        const treeJSON = reactiveSentence.treeJson;
+        for(const index in treeJSON) {
+          const misc = treeJSON[index].MISC;
+          const form = treeJSON[index].FORM;
+          this.conllSoundTree.sound_tree.push([
+            form, misc["AlignBegin"], misc["AlignEnd"]
+          ]);
+        }
+        this.hasSoundUrl = true;
+      }
     }
   },
   methods: {
@@ -545,7 +586,6 @@ export default {
     handleTabChange() {
       // wait for 10ms until this.tab get changed
       setTimeout(() => {
-        console.log("KK tabSelected", this.tab);
         this.sentenceBus.$emit("action:tabSelected", {
           userId: this.tab,
         });
