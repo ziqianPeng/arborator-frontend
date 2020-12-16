@@ -474,9 +474,10 @@ export default {
         for(const index in treeJSON) {
           const misc = treeJSON[index].MISC;
           const form = treeJSON[index].FORM;
-          this.conllSoundTree.sound_tree.push([
-            form, misc["AlignBegin"], misc["AlignEnd"]
-          ]);
+          if(misc.AlignBegin && misc.AlignEnd)
+            this.conllSoundTree.sound_tree.push([
+              form, misc["AlignBegin"], misc["AlignEnd"]
+            ]);
         }
         this.hasSoundUrl = true;
       }

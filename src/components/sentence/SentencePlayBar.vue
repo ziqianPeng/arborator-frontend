@@ -107,12 +107,13 @@ export default {
       waveWidth: 700,
       startMS: 0,
       endMS: 0,
+      canPlaySentence: true,
     };
   },
   
   created() {
     const index = this.url.lastIndexOf("/");
-    this.mediaObject = "/media" + this.url.slice(index);
+    this.mediaObject = "/media/" + this.url.slice(index + 1);
     this.waveWidth = window.innerWidth - 100;
   },
   
@@ -120,12 +121,6 @@ export default {
     ct() {
       return this.currentTime;
     },
-
-    canPlaySentence() {
-      if(this.audioPlayer && null === this.audioPlayer.error)
-          return true;
-      return false;
-    }
   },
   
   mounted() {
@@ -136,6 +131,9 @@ export default {
     if(this.$refs.player) {
       this.audioPlayer = this.$refs.player.audio;
       this.audioPlayer.ontimeupdate = () => this.onTimeUpdate();
+      this.audioPlayer.onerror = (error) => this.canPlaySentence = false;
+    } else {
+      this.canPlaySentence = false;
     }
   },
 
