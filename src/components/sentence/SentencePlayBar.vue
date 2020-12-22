@@ -16,6 +16,8 @@
       :playtime-font-size="14"
       :playtime-slider-width="1"
       :audio-src="mediaObject"
+      :begin="startMS"
+      :end="endMS"
     >
     </av-waveform>
     <div class="row q-pa-none" dense>
@@ -91,13 +93,12 @@
 </style>
 <script>
 import Vue from "vue";
-import AudioVisual from "vue-audio-visual";
+import AvWaveform from 'src/components/vue-audio-visual/AvWaveForm';
 
-Vue.use(AudioVisual);
 
 export default {
   props: ["url", "sentence"],
-
+  components: { AvWaveform },
   data() {
     return {
       audioPlayer: null,
