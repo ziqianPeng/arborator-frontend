@@ -1,5 +1,4 @@
 <script>
-import axios from '../../../node_modules/axios';
 import BaseMixin from './AvBase';
 
 /**
@@ -157,7 +156,7 @@ const props = {
    */
   requester: {
     type: Function,
-    default: axios
+    default: null
   },
 
   /**
@@ -201,7 +200,7 @@ export default {
       responseType: 'arraybuffer',
       onDownloadProgress: this.downloadProgress
     }
-    this.requester.get(this.audio.src, conf)
+    this.$axios.get(this.audio.src, conf)
       .then(response => this.decode(response))
       .catch(err => {
         console.error(`Failed to get file '${this.audio.src}'`)
