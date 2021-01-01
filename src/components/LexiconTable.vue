@@ -48,9 +48,9 @@
       <q-space />
       <q-card>
         <q-separator/>
-        <compare-lexicon
+        <CompareLexicon
           :data="this.dics">
-        </compare-lexicon>
+        </CompareLexicon>
       </q-card>
     </div>
     <q-dialog v-model="openFeatures">
@@ -117,7 +117,7 @@
       </q-card>
     </q-dialog>
     <q-dialog v-model="searchDialog" seamless position="right" full-width>
-      <grew-request-card :parentOnSearch="onSearch" :parentOnTryRule="onTryRule" :grewquery="$route.query.q || ''"></grew-request-card>
+      <grew-request-card :parentOnSearch="onSearch" :parentOnTryRule="onTryRule" :grewquery="$route.query.q || ''" :parentOnTryRules="onTryRules"></grew-request-card>
     </q-dialog>
 
     <q-dialog v-model="uploadDial" :maximized="maximizedUploadToggle" transition-show="fade" transition-hide="fade" >
@@ -270,7 +270,6 @@ export default {
         }
       }
       var datasample = { data: this.uploadLexicon, validator : Validator};
-      // console.log(datasample)
       api.addValidator(this.$route.params.projectname, datasample)
       .then( response => { 
         this.CompareDics = true
@@ -318,36 +317,20 @@ export default {
         api.transformation_grew(this.$route.params.projectname, datasample)
         .then(response => {
           console.log(444555666,response.data)
-          var pattern_prov = response.data.patterns+response.data.without
-          // Demander à KIM si without doit être renvoyé sous forme de pattern
-
+          var pattern_prov = response.data.patterns+response.data.without;
+          this.rules_grew = response.data.tryRules;
+          console.log(888888, this.queries)
           if ( this.RulesApplied == false ){
-            if (response.data.without != ""){
-              if ( this.queries.length == 6 || this.queries[6]['name'] != 'Correct lexicon'){
-              this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands, 'without':response.data.without})}
-              else ( this.queries[6] = {"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands, 'without':response.data.without})
-            // Cette requête est à supprimer après onTryRule !!!!!!!!!!!!!!!!!!!!!
-              }
-            else {
-              if ( this.queries.length == 6 || this.queries[6]['name'] != 'Correct lexicon'){
+              if ( this.queries.slice(-1)[0]['name'] != 'Correct lexicon'){
               this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})}
-              else ( this.queries[6] = {"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})
-              }
-            }
+              else (this.queries.slice(-1)[0] = {"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})}
           else {
-            if (response.data.without != ""){
-              this.queries[6] = {"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands, "without":response.data.without}
-              this.RulesApplied = false;
-              }
-            else {
-              this.queries[6] = {"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands, "without":response.data.without}
+              this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})
               this.RulesApplied = false;
             }
-          }
-        
-        })
+          })
         this.searchDialog=true;
-        // console.log(789789789,this.queries)
+        console.log(789789789,this.queries)
         }
       else{this.showNotif('top', 'noRuletoApply');}
     },
@@ -375,6 +358,26 @@ export default {
       this.queries.splice(-1, 1);
       // console.log(this.queries)
 
+    },
+    onTryRules(searchPattern, rewriteCommands) {
+      console.log(12121, searchPattern, rewriteCommands);
+      console.log("ok");
+      var query = { pattern: searchPattern, rewriteCommands: rewriteCommands };
+      api
+        .tryRulesProject(this.$route.params.projectname, query)
+        .then((response) => {
+          this.resultSearchDialog = true;
+          this.resultSearch = response.data;
+        })
+        .catch((error) => {
+          this.$store.dispatch("notifyError", {
+            error: error.response.data.message,
+          });
+        this.RulesGrew=[];
+        this.RulesApplied = true;
+        this.searchDialog=false;
+        this.queries.splice(-1, 1);
+        });
     },
     addEntry(){
       if(this.infotochange !=""){
