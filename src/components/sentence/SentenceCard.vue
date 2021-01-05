@@ -1,5 +1,5 @@
 <template>
-  <q-card :id="index">
+  <q-card :id="index" ref="mySentence">
     <q-card-section>
       <div class="row items-center">
         <!-- icon="textsms"  ref="self" -->
@@ -11,6 +11,19 @@
         >
           {{ sentenceId }}</q-chip
         >&nbsp;&nbsp;&nbsp;
+        <q-btn
+          v-if="hasSoundUrl"
+          flat
+          round
+          dense
+          icon="ion-play"
+          @click="showPlayBar  = !showPlayBar"
+          v-bind:class="'redo-button'"
+        >
+          <q-tooltip>
+            Click to show/hide play bar
+          </q-tooltip>
+        </q-btn>
         <template>
           <q-input
             style="width: 65%"
@@ -199,19 +212,6 @@
           v-bind:class="'redo-button'"
         >
         </q-btn>
-        <q-btn
-          v-if="hasSoundUrl"
-          flat
-          round
-          dense
-          icon="ion-play"
-          @click="showPlayBar  = !showPlayBar"
-          v-bind:class="'redo-button'"
-        >
-          <q-tooltip>
-            Click to show/hide play bar
-          </q-tooltip>
-        </q-btn>
       </div>
 
       <div class="full-width row justify-end">
@@ -231,6 +231,9 @@
         <SentencePlayBar
           :url="conllSoundTree.sound_url"
           :sentence="conllSoundTree.sound_tree"
+          v-on:goToNext="handleGoToNext"
+          v-on:goToPrev="handleGoToPrev"
+          ref="playBar"
         >
         </SentencePlayBar>
       </div>
@@ -368,7 +371,14 @@ export default {
     MultiEditDialog,
     SentencePlayBar
   },
-  props: ["index", "sentence", "sentenceId", "searchResult", "exerciseLevel"],
+  props: [
+    "index", 
+    "sentence", 
+    "sentenceId", 
+    "searchResult", 
+    "exerciseLevel", 
+    "playBus"
+  ],
   data() {
     return {
       sentenceBus: new Vue(), // Event/Object Bus that communicate between all components
@@ -483,6 +493,33 @@ export default {
       }
     }
   },
+
+  mounted() {
+    // Move the view on current component and play the sentence
+    this.playBus.$on('action: playSentence', ({ index }) => {
+      if (index === this.index) {
+        this.showPlayBar = true;
+        
+        if (this.$refs.mySentence) {
+          this.$refs.mySentence.$el.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "end",
+          });
+        }
+
+        this.$nextTick().then(() => {
+          // Wait for the playbar to load audio steam
+          setTimeout(() => {
+            if (this.$refs.playBar) {
+              this.$refs.playBar.handlePlaySentence();
+            }
+          }, 1000);
+        });
+      }
+    })
+  },
+
   methods: {
     // to delete KK
     refresh() {
@@ -571,6 +608,7 @@ export default {
         });
       }
     },
+    
     /**
      * Receive canUndo, canRedo status from VueDepTree child component and
      * decide whether to disable undo, redo buttons or not
@@ -580,6 +618,27 @@ export default {
       this.canRedo = event.canRedo;
       this.canSave = event.canSave;
     },
+
+    /**
+     * Emits an event for playing next sentence
+     */
+    handleGoToNext() {
+      this.showPlayBar = false;
+      this.playBus.$emit('action: playSentence', {
+        index: this.index + 1
+      });
+    },
+
+    /**
+     * Emits an event for playing previous sentence
+     */
+    handleGoToPrev() {
+      this.showPlayBar = false;
+      this.playBus.$emit('action: playSentence', {
+        index: this.index - 1
+      });
+    },
+
     /**
      * triggers when the user selects another tab, and update canUndo, canRedo,
      * canSave status

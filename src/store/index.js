@@ -66,15 +66,15 @@ export default new Vuex.Store({
         notifyError({commit}, {error}){
             var msg;
             var caption="";
-            console.log(7777,error.message)
-            if(error.message!=undefined) 
+            console.log(error)
+            if(error.message != undefined) 
                 {msg = error.message;}
             else if (error.response) {
                 if(error.response.status == 403){ msg = (error.response.message)?error.response.message:i18n.t('error403');  }
                 else if(error.response.status == 401){ msg == (error.response.message)?error.response.message:i18n.t('error401');}
-                else { msg =(error.response.message)?error.response.message: error.response.statusText + ' error ' + error.response.status; }
+                else { msg = (error.response.message)?error.response.message: error.response.statusText + ' error ' + error.response.status; }
             }
-            else msg='oops'+error;
+            else msg = error;
             if (error.caption) caption=error.caption;
             if (error.permanent) Notify.create({message: msg, position: 'top-right', color: 'negative', icon:'warning', caption:caption, timeout:0, closeBtn:'Dismiss', html:true});
             else Notify.create({message: msg, position: 'top-right', color: 'negative', icon:'warning', caption:caption});

@@ -19,6 +19,7 @@
             searchResult=""
             v-on:refresh:trees="getSampleTrees"
             :exerciseLevel="exerciseLevel"
+            :playBus="playBus"
           >
           </SentenceCard>
         </template>
@@ -84,6 +85,7 @@ export default {
       window: { width: 0, height: 0 },
       virtualListIndex: 15,
       scrolalaTimeStep: 10, // give the scroll 10 seconds
+      playBus: new Vue() // Event/Object bus that handles play prev or next sentence
     };
   },
   computed: {

@@ -6,6 +6,15 @@ import BaseMixin from './AvBase';
  */
 const props = {
   /**
+  * prop: 'audio-src-local'
+  * Alternative source for audio element. Indicates media url on the local server
+  */
+  audioSrcLocal: {
+    type: String,
+    default: null
+  },
+  
+  /**
    * prop: 'canv-width'
    * Canvas element width. Default 500
    */
@@ -175,7 +184,8 @@ const props = {
   end: {
     type: Number,
     default: -1
-  }
+  },
+
 }
 
 /**
@@ -200,12 +210,8 @@ export default {
       responseType: 'arraybuffer',
       onDownloadProgress: this.downloadProgress
     }
-    this.$axios.get(this.audio.src, conf)
-      .then(response => this.decode(response))
-      .catch(err => {
-        console.error(`Failed to get file '${this.audio.src}'`)
-        console.log(err)
-      })
+
+    this.getAudioStream(this.audio.src, conf)
     this.audio.onplay = () => {
       this.animId = requestAnimationFrame(this.waveformAnim)
     }
@@ -229,6 +235,22 @@ export default {
     mainLoop: function () {
       /* istanbul ignore next */
       return null
+    },
+
+    getAudioStream: function(src, conf) {
+      this.audio.src = src;
+      this.$axios.get(src, conf)
+        .then(response => { 
+          this.decode(response);
+        })
+        .catch(err => {
+          if (src === this.audioSrc) {
+            this.getAudioStream(this.audioSrcLocal, conf)
+          } else {
+            this.$store.dispatch('notifyError', { error: 'Sound URL is not reachable' })
+            this.audio.src = null;
+          }
+        })
     },
 
     /**

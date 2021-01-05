@@ -15,11 +15,56 @@
       :playtime-line-width="5.8"
       :playtime-font-size="14"
       :playtime-slider-width="1"
-      :audio-src="mediaObject"
+      :audio-src="remoteUrl"
+      :audio-src-local="localUrl"
       :begin="startMS"
       :end="endMS"
     >
     </av-waveform>
+    <div class="row q-pa-md" dense>
+      <q-btn
+        class="q-mr-xs"
+        color="primary"
+        icon="skip_previous"
+        size="sm"
+        @click="handlePlayPrev()"
+        round
+      >
+        <q-tooltip>
+          Play the previous sentence
+        </q-tooltip>
+      </q-btn>
+      <q-btn
+        class="q-mr-xs"
+        color="primary"
+        size="sm"
+        icon="not_started"
+        @click="handlePlaySentence()"
+        :disable="!canPlay"
+        round
+      >
+        <q-tooltip>
+          Play / pause the sentence
+        </q-tooltip>
+      </q-btn>
+      <q-btn
+        class="q-mr-xs"
+        color="primary"
+        size="sm"
+        icon="skip_next"
+        @click="handlePlayNext()"
+        round
+      >
+        <q-tooltip>
+          Play the next sentence
+        </q-tooltip>
+      </q-btn>
+       <q-toggle
+        v-model="replay"
+        label="Replay"
+        size="xs"
+      />
+    </div>
     <div class="row q-pa-none" dense>
       <span
         class="justify-end q-pa-none align-right"
@@ -62,20 +107,6 @@
           {{ t[0] }}
         </q-chip>
       </span>
-      <q-btn 
-        dense
-        round 
-        icon="replay" 
-        color="primary"
-        @click="handlePlaySentence()"
-        class="line-play"
-        size="sm"
-        :disable="!canPlaySentence"
-      >
-        <q-tooltip>
-          Click to play the sentence
-        </q-tooltip>
-      </q-btn>
       <q-space />
     </div>
   </div>
@@ -104,24 +135,33 @@ export default {
       audioPlayer: null,
       progcolor: "black",
       currentTime: -1,
-      mediaObject: null,
+      localUrl: null,
+      remoteUrl: null,
       waveWidth: 700,
       startMS: 0,
       endMS: 0,
-      canPlaySentence: true,
+      replay: false,
+      canPlay: false
     };
   },
   
   created() {
     const index = this.url.lastIndexOf("/");
-    this.mediaObject = "/media/" + this.url.slice(index + 1);
+    this.remoteUrl = this.url;
+    this.localUrl = "/media/" + this.url.slice(index + 1);
     this.waveWidth = window.innerWidth - 100;
+
+    // If url is http, not https then search for audio on the server
+    if (this.url.includes('http://')){ 
+      this.remoteUrl = this.localUrl
+    }
   },
   
   computed: {
     ct() {
       return this.currentTime;
     },
+
   },
   
   mounted() {
@@ -131,30 +171,62 @@ export default {
     this.endMS = this.sentence[length - 1][2] / 1000;
     if(this.$refs.player) {
       this.audioPlayer = this.$refs.player.audio;
+      this.audioPlayer.currentTime = this.startMS;
       this.audioPlayer.ontimeupdate = () => this.onTimeUpdate();
-      this.audioPlayer.onerror = (error) => this.canPlaySentence = false;
-    } else {
-      this.canPlaySentence = false;
+      this.audioPlayer.onloadeddata = (evt) => this.canPlay = true;
     }
   },
 
   methods: {
     onTimeUpdate() {
-      if(this.audioPlayer.currentTime > this.endMS
-        || this.audioPlayer.currentTime < this.startMS)
-        this.audioPlayer.currentTime = this.startMS;
+      if(
+        this.audioPlayer.currentTime > this.endMS || 
+        this.audioPlayer.currentTime < this.startMS
+      ) {
+        this.audioPlayer.currentTime = this.startMS + 0.001;
+        if (this.isPlaying() && !this.replay) {
+          this.audioPlayer.pause();
+        }
+      }
+
       this.currentTime = this.audioPlayer.currentTime;
     },
 
+    isPlaying() {
+      if (this.audioPlayer) {
+        return !this.audioPlayer.paused;
+      } else {
+        return false;
+      }
+    },
+
     handlePlaySentence() {
-      this.audioPlayer.currentTime = this.startMS;
-      this.audioPlayer.play();
+      if (!this.canPlay) {
+        return;
+      }
+      if (!this.audioPlayer.paused) {
+        this.audioPlayer.pause();
+      } else {
+        this.audioPlayer.play();
+      }
+    },
+
+    handlePlayPrev() {
+      this.audioPlayer.pause();
+      this.$emit('goToPrev');
+    },
+
+    handlePlayNext() {
+      this.audioPlayer.pause();
+      this.$emit('goToNext');
     },
 
     handleWordClicked(word) {
       this.audioPlayer.currentTime = word[1] / 1000;
       this.audioPlayer.play();
-    }
-  }
+    },
+
+  },
+
 };
 </script>
