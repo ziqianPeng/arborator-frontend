@@ -116,9 +116,16 @@
           </q-card-actions>
       </q-card>
     </q-dialog>
-    <q-dialog v-model="searchDialog" seamless position="right" full-width>
-      <grew-request-card :parentOnSearch="onSearch" :parentOnTryRule="onTryRule" :grewquery="$route.query.q || ''" :parentOnTryRules="onTryRules"></grew-request-card>
-    </q-dialog>
+    <template
+      v-if="
+        !(
+          $store.getters['config/exerciseMode'] &&
+          !$store.getters['config/isTeacher']
+        )
+      "
+    >
+      <GrewSearch :sentenceCount="this.data.length" />
+    </template>
 
     <q-dialog v-model="uploadDial" :maximized="maximizedUploadToggle" transition-show="fade" transition-hide="fade" >
       <q-card style=" max-width: 100vw;">
@@ -156,7 +163,7 @@
 import api from '../boot/backend-api';
 import { openURL } from 'quasar'
 import AttributeTable from './sentence/AttributeTable';
-import GrewRequestCard from './grewSearch/GrewRequestCard';
+import GrewSearch from "./grewSearch/GrewSearch";
 import CompareLexicon from './CompareLexicon';
 import grewTemplates from '../assets/grew-templates.json';
 
@@ -164,7 +171,7 @@ export default {
   name: "LexiconTable",
   props: ["data"],
   components: {
-    GrewRequestCard,
+    GrewSearch,
     CompareLexicon,
     AttributeTable
   },
@@ -312,7 +319,7 @@ export default {
     },
     getRulesGrew(){
       if(this.RulesGrew.length!=0){
-        var datasample = { data: this.RulesGrew};
+        var datasample = { data: this.RulesGrew };
         // console.log(123123,datasample)
         api.transformation_grew(this.$route.params.projectname, datasample)
         .then(response => {
@@ -323,7 +330,11 @@ export default {
           if ( this.RulesApplied == false ){
               if ( this.queries.slice(-1)[0]['name'] != 'Correct lexicon'){
               this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})}
-              else (this.queries.slice(-1)[0] = {"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})}
+              else (
+                this.queries.slice(-1)[0]['pattern'] = pattern_prov, 
+                this.queries.slice(-1)[0]['commands'] = response.data.commands
+                )
+            }
           else {
               this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})
               this.RulesApplied = false;
@@ -333,51 +344,6 @@ export default {
         console.log(789789789,this.queries)
         }
       else{this.showNotif('top', 'noRuletoApply');}
-    },
-    ondialoghide(){},
-    onSearch(searchPattern){
-      var query = { pattern: searchPattern };
-      api.searchProject(this.$route.params.projectname, query)
-      .then(response => {
-          this.resultSearchDialog = true;
-          this.resultSearch = response.data;
-      }).catch(error => {  this.$store.dispatch("notifyError", {error: error})  });
-    },
-    onTryRule(searchPattern, rewriteCommands){
-      console.log(12121,searchPattern, rewriteCommands)
-      var query = { pattern: searchPattern, rewriteCommands:rewriteCommands };
-      console.log(3333, query);
-      api.tryRuleProject(this.$route.butparams.projectname, query)
-      .then(response => {
-          this.resultSearchDialog = true;
-          this.resultSearch = response.data;
-      }).catch(error => {  this.$store.dispatch("notifyError", {error: error.response.data.message})  });
-      this.RulesGrew=[];
-      this.RulesApplied = true;
-      this.searchDialog=false;
-      this.queries.splice(-1, 1);
-      // console.log(this.queries)
-
-    },
-    onTryRules(searchPattern, rewriteCommands) {
-      console.log(12121, searchPattern, rewriteCommands);
-      console.log("ok");
-      var query = { pattern: searchPattern, rewriteCommands: rewriteCommands };
-      api
-        .tryRulesProject(this.$route.params.projectname, query)
-        .then((response) => {
-          this.resultSearchDialog = true;
-          this.resultSearch = response.data;
-        })
-        .catch((error) => {
-          this.$store.dispatch("notifyError", {
-            error: error.response.data.message,
-          });
-        this.RulesGrew=[];
-        this.RulesApplied = true;
-        this.searchDialog=false;
-        this.queries.splice(-1, 1);
-        });
     },
     addEntry(){
       if(this.infotochange !=""){

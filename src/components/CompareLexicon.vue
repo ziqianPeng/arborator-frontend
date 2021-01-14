@@ -38,20 +38,16 @@
     </template>
 
     </q-table>
-    <q-dialog v-model="searchDialog" seamless position="right" full-width>
-      <grew-request-card :parentOnSearch="onSearch" :parentOnTryRule="onTryRule" :grewquery="$route.query.q || ''" :parentOnTryRules="onTryRules"></grew-request-card>
-    </q-dialog>
-    <q-dialog
-      v-model="resultSearchDialog"
-      transition-show="fade"
-      transition-hide="fade"
+    <template
+      v-if="
+        !(
+          $store.getters['config/exerciseMode'] &&
+          !$store.getters['config/isTeacher']
+        )
+      "
     >
-      <result-view
-        :searchresults="resultSearch"
-        searchscope="project"
-      ></result-view>
-      <!-- :totalsents="project.infos.number_sentences" -->
-    </q-dialog>
+      <GrewSearch :sentenceCount="this.data.length" />
+    </template>
   </div>
 </template>
 
@@ -59,17 +55,17 @@
 import Vue from "vue";
 import api from '../boot/backend-api';
 import { openURL } from 'quasar'
-import GrewRequestCard from './grewSearch/GrewRequestCard';
 import grewTemplates from '../assets/grew-templates.json';
 import { len } from 'snapsvg-cjs';
+import GrewSearch from "./grewSearch/GrewSearch";
 
 
 export default {
-  components: { GrewRequestCard },
+  components: { GrewSearch },
   name: "CompareLexicon",
   props: ["data"],
   component: {
-    GrewRequestCard
+    GrewSearch,
     },
 
   data() {
@@ -167,7 +163,10 @@ export default {
           if ( this.RulesApplied == false ){
               if ( this.queries.slice(-1)[0]['name'] != 'Correct lexicon'){
               this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})}
-              else (this.queries.slice(-1)[0] = {"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})}
+              else (
+                this.queries.slice(-1)[0]['pattern'] = pattern_prov, 
+                this.queries.slice(-1)[0]['commands'] = response.data.commands
+              )}
           else {
               this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})
               this.RulesApplied = false;
@@ -192,45 +191,6 @@ export default {
                 actions: actions,
                 timeout: 2000
       })
-    },
-    onSearch(searchPattern){
-      var query = { pattern: searchPattern };
-      api.searchProject(this.$route.params.projectname, query)
-      .then(response => {
-          this.resultSearchDialog = true;
-          this.resultSearch = response.data;
-      }).catch(error => {  this.$store.dispatch("notifyError", {error: error})  });
-    },
-    onTryRule(searchPattern, rewriteCommands) {
-      console.log(12121, searchPattern, rewriteCommands);
-      var query = { pattern: searchPattern, rewriteCommands: rewriteCommands };
-      api
-        .tryRuleProject(this.$route.params.projectname, query)
-        .then((response) => {
-          this.resultSearchDialog = true;
-          this.resultSearch = response.data;
-        })
-        .catch((error) => {
-          this.$store.dispatch("notifyError", {
-            error: error.response.data.message,
-          });
-        });
-    },
-    onTryRules(searchPattern, rewriteCommands) {
-      console.log(12121, searchPattern, rewriteCommands);
-      console.log("ok");
-      var query = { pattern: searchPattern, rewriteCommands: rewriteCommands };
-      api
-        .tryRulesProject(this.$route.params.projectname, query)
-        .then((response) => {
-          this.resultSearchDialog = true;
-          this.resultSearch = response.data;
-        })
-        .catch((error) => {
-          this.$store.dispatch("notifyError", {
-            error: error.response.data.message,
-          });
-        });
     },
   }
 };

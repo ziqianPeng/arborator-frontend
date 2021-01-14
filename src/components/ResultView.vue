@@ -25,16 +25,27 @@
           style="height: 80vh; width: 90vw"
           :virtual-scroll-slice-size="5"
           :virtual-scroll-item-size="200"
+          type="table"
         >
           <template v-slot="{ item, index }">
-            <sentence-card
-              :key="index"
-              :id="item[1]"
-              :sentence="searchresults[item[0]][item[1]]"
-              :index="index"
-              :sentenceId="item[1]"
-              searchResult="searchResult"
-            ></sentence-card>
+            <tr :key="index">
+              <td>
+                <q-toggle
+                  v-model="samplesFrozen.selected[index]"
+                  checked-icon="check"
+                  unchecked-icon="clear"/>
+              </td>
+              <td>
+                <sentence-card
+                  :key="index"
+                  :id="item[1]"
+                  :sentence="searchresults[item[0]][item[1]]"
+                  :index="index"
+                  :sentenceId="item[1]"
+                  searchResult="searchResult"
+                ></sentence-card>
+              </td>
+            </tr>
           </template>
         </q-virtual-scroll>
       </div>
@@ -50,23 +61,28 @@
         </div>
       </div>
     </q-card-section>
+    <q-card-section>
+      <q-btn color="primary" @click="onApplyRules" label="Apply Rules" no-caps />
+    </q-card-section>
   </q-card>
 </template>
 
 <script>
+import { select } from 'snapsvg-cjs';
 import api from "../boot/backend-api";
 import SentenceCard from "./sentence/SentenceCard";
 // var heavyList = [];
 // var heavyListSamples = [];
 export default {
   components: { SentenceCard },
-  props: ["searchresults", "totalsents", "searchscope"],
+  props: ["searchresults", "totalsents", "searchscope", "rulesGrew"],
 
   data() {
     return {
       samplesFrozen: { list: [], indexes: {}, samples: [] },
       loading: false,
       inResult: true,
+      selected: [],
     };
   },
   computed: {
@@ -91,18 +107,21 @@ export default {
       var listIds = []; // list: [["WAZA_10_Bluetooth-Lifestory_MG","WAZA_10_Bluetooth-Lifestory_MG__86"],["WAZA_10_Bluetooth-Lifestory_MG","WAZA_10_Bluetooth-Lifestory_MG__79"], ...
       var index = 0;
       var index2Ids = {}; // object: {"0":["WAZA_10_Bluetooth-Lifestory_MG","WAZA_10_Bluetooth-Lifestory_MG__86"],"1":["WAZA_10_Bluetooth-Lifestory_MG","WAZA_10_Bluetooth-Lifestory_MG__79"], ...
+      var selectedIndex = {};
       // this is sent to the sentenceCard: searchresults[item[0]][item[1]], items from this.samplesFrozen.list
       for (let sampleId in this.searchresults) {
         for (let sentId in this.searchresults[sampleId]) {
           listIds.push([sampleId, sentId]);
           index2Ids[index] = [sampleId, sentId];
+          selectedIndex[index] = true;
           this.searchresults[sampleId][sentId]["sample_name"] = sampleId;
           index++;
         }
       }
       // heavyList = listIds;
       Object.freeze(listIds);
-      this.samplesFrozen = { list: listIds, indexes: index2Ids };
+      this.samplesFrozen = { list: listIds, indexes: index2Ids, selected: selectedIndex };
+      // console.log(this.samplesFrozen)
     },
     /**
      * Requests project configuration from backend and put it into the store
@@ -119,6 +138,33 @@ export default {
     //         this.$store.dispatch("notifyError", {error: error});
     //     });
     // },
+
+    onApplyRules() {
+      // console.log(12121, this.rulesGrew);
+      // console.log("ok");
+      var sampleIds = [];
+      var objLength = Object.keys(this.samplesFrozen.selected).length;
+      // console.log(objLength)
+      for (let i = 0; i < objLength; i++){
+        if (this.samplesFrozen.selected[i] == true)
+          sampleIds.push(this.samplesFrozen.list[i][1])
+      }
+      console.log(sampleIds)
+      
+      var query = { rules: this.rulesGrew, SampleIds: sampleIds };
+      api
+        .applyRulesProject(this.$route.params.projectname, query)
+        .then((response) => {
+          // this.resultSearchDialog = true;
+          // this.resultSearch = response.data;
+          console.log(response.data)
+        })
+        .catch((error) => {
+          this.$store.dispatch("notifyError", {
+            error: error.response.data.message,
+          });
+        });
+    },
   },
 };
 </script>
