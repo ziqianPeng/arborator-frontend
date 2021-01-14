@@ -235,6 +235,7 @@ export default {
     };
   },
   mounted() {
+    document.title = this.$t('projectHub').title;
     this.initLoading = true;
     this.listMode = this.$ls.get("project_view", false);
     this.getProjects();

@@ -36,21 +36,30 @@ export default {
   mounted() {
     this.$store.dispatch("user/checkSession");
 
-    // this.store.dispatch("checkSession", {});
-    // .then(() => {
-    //   this.$router.push('/');
-    // })
     try {
       this.$q.dark.set(this.$ls.get("dm"));
     } catch (error) {
       console.log("ls not found");
     }
 
-    try {
-      this.$i18n.locale = this.$ls.get("arbolang");
-    } catch (error) {
-      this.$i18n.locale = this.$q.lang.getLocale();
-      this.$ls.set("arbolang", this.$i18n.locale);
+    let locale = this.$ls.get("arbolang");
+
+    if (null === locale) {
+      const browserLang = window.navigator.language;
+
+      if ('fr' === browserLang) {
+        locale = 'fr-fra';
+      } else {
+        locale = 'en-us';
+      }
+    }
+    this.$i18n.locale = locale;
+    this.$ls.set("arbolang", this.$i18n.locale);
+
+    const savedRoute = window.localStorage.getItem('currentRoute');
+    
+    if (savedRoute && '/' !== savedRoute) {
+      this.$router.push(savedRoute);
     }
   },
   methods: {

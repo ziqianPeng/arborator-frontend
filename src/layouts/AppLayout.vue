@@ -49,11 +49,11 @@
             </q-tooltip>
           </q-icon>
           <q-select v-model="lang" :options="langOptions" dense borderless options-dense map-options emit-value >
-            <template v-slot:append>
+            <!-- <template v-slot:append>
               <q-avatar>
                 <q-icon name="fas fa-globe" />
               </q-avatar>
-            </template>
+            </template> -->
           </q-select>
           <q-btn flat round @click="toggleDarkMode()"  :icon="$q.dark.isActive?'lightbulb':'brightness_2'"></q-btn>
           <q-btn-dropdown v-show="!store.getters['user/isLoggedIn']" color="secondary" outline label="Log In" icon="account_circle">
@@ -219,7 +219,7 @@ export default {
           this.$store.getters["user/isSuperAdmin"];
       } else if(this.$route.params.kprojectname) {
         const { username } = this.$store.getters["user/getUserInfos"];
-        console.log(username, this.$store.getters["config/admins"])
+
         return this.$store.getters["config/admins"].includes(username) ||
           this.$store.getters['user/isSuperAdmin'];
       } else {

@@ -23,7 +23,6 @@
             v-for="(t, j) in sent"
             :key="j"
           >
-            <!-- {{t[1]/1000}} -->
             <q-chip
               v-if="t[2] / 1000 < ct"
               size="md"
@@ -38,8 +37,8 @@
             </q-chip>
             <q-chip
               v-else-if="
-                t[1] / 1000 <= ct
-                && t[2] / 1000 >= ct
+                t[1] / 1000 < ct
+                && t[2] / 1000 > ct
               "
               square
               size="md"
@@ -64,6 +63,20 @@
             </q-chip>
           </span>
           <q-space />
+          <q-btn 
+            dense
+            round 
+            icon="replay" 
+            color="primary"
+            @click="handlePlayLine(i)"
+            v-if="canPlayLine"
+            class="line-play"
+            size="sm"
+          >
+            <q-tooltip>
+              {{ isReplaying(i) ? 'Click to play normally' : 'Click to replay the sentence' }}
+            </q-tooltip>
+          </q-btn>
           <q-btn
             v-if="admin && segments['original'][i] != mytrans[i]"
             round
@@ -301,6 +314,11 @@
   width: 15px;
 }
 
+.line-play {
+  margin-right: 5px;
+  min-width: 2.6em !important;
+}
+
 .align-right {
   text-align: right;
 }
@@ -384,6 +402,11 @@ export default {
           value: "sound",
         },
       ],
+      currentLine: -1,
+      isPlayingLine: false,
+      lineStart: 0,
+      lineEnd: 0,
+      replay: false,
     };
   },
 
@@ -485,12 +508,25 @@ export default {
       this.segments = {};
       this.users = [];
       this.selectedUsers = [];
-      for (const annotator in this.conll) {
+      const annotators = Object.keys(this.conll);
+      
+      // move the 'original' key to the index 0
+      const originalIndex = annotators.findIndex(annotator => 'original' === annotator);
+      const temp = annotators[0];
+
+      annotators[0] = annotators[originalIndex];
+      annotators[originalIndex] = temp;
+
+      // Generate transcriptions for each annotator
+      for (const index in annotators) {
+        const annotator = annotators[index];
         const isOriginal = annotator == "original";
         const original = !isOriginal ? this.segments["original"] : [];
-        const conllSegment = isOriginal
-          ? this.conll[annotator]
-          : this.conll[annotator]["transcription"];
+        const conllSegment = 
+          isOriginal ? 
+          this.conll[annotator] : 
+          this.conll[annotator]["transcription"];
+
         if (conllSegment.length != 0) {
           this.segments[annotator] = conllSegment.map((sent) =>
             sent.reduce((acc, t) => acc + (isOriginal ? t[0] : t) + " ", "")
@@ -498,13 +534,17 @@ export default {
           this.users.push({ label: annotator, value: annotator });
         } else {
           this.segments[annotator] = original;
-          if (!this.admin) this.wasSaved = false;
+          if (!this.admin) { 
+            this.wasSaved = false;
+          }
         }
         const segments = this.deepCopy(this.segments[annotator]);
-        if (!isOriginal)
+
+        if (!isOriginal) {
           this.diffsegments[annotator] = segments.map((sent, i) =>
             Diff.diffWords(original[i], sent)
           );
+        }
         if (annotator == this.username && !this.admin) {
           this.mytrans = segments;
           this.sound = this.conll[annotator].sound;
@@ -550,18 +590,27 @@ export default {
             const minMS = originalLine[0][1];
             const maxMS = originalLine[originalWords - 1][2];
             const realWordsCount = transLine.reduce(
-              (acc, t) => this.isRealWord(t) ? acc + 1 : acc, 0);
+              (acc, t) => this.isRealWord(t) ? acc + 1 : acc, 0
+            );
             const msec = (maxMS  - minMS) / realWordsCount;
             let startMS = 0, endMS = 0;
+
             for(word = 0; word < transWords; word ++) {
               const isRealWord = this.isRealWord(transLine[word]);
-              if(isRealWord) endMS += msec;
+
+              if(isRealWord) {
+                endMS += msec;
+              }
+
               transLine[word] = [
                 transLine[word],
                 Math.round(parseFloat(minMS) + startMS),
                 Math.round(parseFloat(minMS) + endMS)
               ];
-              if(isRealWord) startMS += msec;
+
+              if(isRealWord) {
+                startMS += msec;
+              }
             }
           }
         }
@@ -573,6 +622,7 @@ export default {
         .then((content) => {
           const zipFileName = this.ksamplename + ".zip";
           const status = exportFile(zipFileName, content);
+
           if (status) {
             this.$q.notify({
               message: "Exported conlls successfully.",
@@ -585,8 +635,7 @@ export default {
               error: "Browser denied file download...",
             });
           }
-        })
-        .catch((error) => {
+        }).catch((error) => {
           this.$store.dispatch("notifyError", { error: error });
         });
     },
@@ -599,6 +648,7 @@ export default {
       let conllString = "";
       let line = 0;
       const lines = transcription.length;
+
       for (; line < lines; line++) {
         let word = 0;
         const words = transcription[line].length;
@@ -606,6 +656,7 @@ export default {
           (acc, t) => acc + (t[0] != "." ? " " : "") + t[0],
           ""
         );
+
         conllString +=
           "# sent_id = " +
           this.ksamplename +
@@ -624,6 +675,7 @@ export default {
         }
         conllString += "\n";
       }
+      conllString += "\n";
       return conllString;
     },
 
@@ -701,10 +753,19 @@ export default {
       this.audioplayer.currentTime = triple[1] / 1000; //-.5;
       this.manualct = triple[1] / 1000;
       this.audioplayer.play();
+      
+      if(this.manualct > this.lineEnd)
+        this.isPlayingLine = false;
     },
 
     onTimeUpdate() {
       if (this.$refs.player == null) return;
+      if (this.isPlayingLine) {
+        if(this.audioplayer.currentTime > this.lineEnd) {
+          this.audioplayer.currentTime = this.lineStart;
+        }
+      }
+
       this.currentTime = this.audioplayer.currentTime;
       this.manualct = this.currentTime;
       const current = this.$refs.words.querySelector(".current");
@@ -715,6 +776,28 @@ export default {
           inline: "center",
         });
     },
+
+    handlePlayLine(index) {
+      const line = this.conll['original'][index];
+      const length = line.length;
+
+      if (this.isPlayingLine && this.currentLine === index) {
+        this.isPlayingLine = false;
+      } else {
+        this.lineStart = line[0][1] / 1000;
+        this.lineEnd = line[length - 1][2] / 1000;
+        this.audioplayer.currentTime = this.lineStart;
+        this.audioplayer.play();
+        this.isPlayingLine = true;
+      }
+      this.currentLine = index;
+    },
+
+    isReplaying(index) {
+      const isReplaying = this.isPlayingLine && index == this.currentLine;
+
+      return isReplaying;
+    }
   },
 };
 </script>

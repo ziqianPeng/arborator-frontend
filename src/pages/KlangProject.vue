@@ -125,6 +125,7 @@ export default {
         .getKlangProjectSamples(this.kprojectname)
         .then((response) => {
           this.samples = response.data;
+          this.samples.sort();
         })
         .catch((error) => {
           this.$store.dispatch("notifyError", { error: error });

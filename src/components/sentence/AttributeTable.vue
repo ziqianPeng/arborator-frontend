@@ -69,6 +69,7 @@
               filled
               dense
               @input="oninput(props.row)"
+              :readonly="isImmutable(props.row)"
               :rules="[val => !!val || 'Field is required']"
             />
 
@@ -101,7 +102,15 @@
             </q-select>
           </q-td>
            <q-td  v-if="modifiable=='true'" key='actions' :props="props">
-            <q-btn dense round flat color="grey" @click="deleteRow(props.row)" icon="delete">
+            <q-btn 
+              v-if="!isImmutable(props.row)"
+              dense 
+              round 
+              flat 
+              color="grey" 
+              @click="deleteRow(props.row)" 
+              icon="delete"
+            >
               <q-tooltip :delay="300" >Erase the attribute {{props.row.a}}</q-tooltip>
             </q-btn>
           </q-td>   
@@ -194,7 +203,12 @@ export default {
     
     },
   
+    isImmutable(row) {
+      const immutableFields = ['user_id', 'sent_id'];
+      const index = immutableFields.indexOf(row.a);
 
+      return -1 !== index;
+    }
   }
 };
 </script>

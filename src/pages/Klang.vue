@@ -55,6 +55,7 @@ export default {
         .getKlangProjects()
         .then((response) => {
           this.projects = response.data;
+          this.projects.sort();
         })
         .catch((error) => {
           this.$store.dispatch("notifyError", { error: error });

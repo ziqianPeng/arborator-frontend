@@ -112,6 +112,7 @@ export default {
 
   // page when you enter a project ( samples info, etc)
   projectView: {
+    title: "Arborator-Grew Projects",
     tooltipSettings: "Modify project settings",
     tooltipViewAdmin: "View administrator information",
     nodata: [

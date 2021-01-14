@@ -49,7 +49,8 @@ export default function (/* { store, ssrContext } */) {
       store.dispatch("config/fetchKlangProjectSettings", {
         projectname: to.params.kprojectname
       });
-    } 
+    }
+    window.localStorage.setItem('currentRoute', to.path);
   });
 
   return Router

@@ -114,6 +114,7 @@ export default {
 
   // page when you enter a project ( samples info, etc)
   projectView: {
+    title: "Projets Arborator-Grew",
     tooltipSettings: "Modifier les paramètres du projet",
     tooltipViewAdmin: "Voir les informations de l'administrateur",
     nodata: [

@@ -396,6 +396,7 @@
                 v-model="table.filter"
                 placeholder="Search"
                 text-color="blue-grey-8"
+                ref="searchInput"
               >
                 <template v-slot:append>
                   <q-icon name="search" />
@@ -441,7 +442,7 @@
 
             <template v-slot:body="props">
               <q-tr :props="props">
-                <q-td auto-width>
+                <q-td auto-width v-if="isProjectAdmin">
                   <q-toggle dense v-model="props.selected" />
                 </q-td>
                 <q-td key="samplename" :props="props">
@@ -564,7 +565,7 @@
           !(
             $store.getters['config/exerciseMode'] &&
             !$store.getters['config/isTeacher']
-          )
+          ) && isProjectAdmin
         "
       >
         <GrewSearch :sentenceCount="0" />
@@ -815,6 +816,11 @@ export default {
     noselect() {
       return this.table.selected.length < 1;
     },
+
+    isProjectAdmin() {
+      return this.$store.getters["config/isAdmin"] 
+      || this.$store.getters["user/isSuperAdmin"];
+    }
   },
   created() {
     window.addEventListener("resize", this.handleResize);
@@ -827,9 +833,15 @@ export default {
     this.getUsers();
     this.getProjectSamples();
 
-    document.title = this.$route.params.projectname;
+    document.title = this.$t('projectView').title;
     if (this.$route.query.q && this.$route.query.q.length > 0)
       this.searchDialog = true;
+
+    const input = this.$refs.searchInput;
+    
+    if (input) {
+      input.focus();
+    }
   },
   methods: {
     handleResize() {

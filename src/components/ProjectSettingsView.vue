@@ -35,7 +35,7 @@
               :color="$q.dark.isActive ? 'red-13' : 'positive'"
               size="lg"
             ></q-icon>
-            {{ name }}
+            {{ projectname }}
           </div>
         </q-img>
 
@@ -208,22 +208,11 @@
           <q-list bordered separator class="list-size">
             <q-item v-for="admin in admins" :key="admin" clickable v-ripple>
               <q-item-section>{{ admin }}</q-item-section>
-              <q-item-section side>
-                <q-btn
-                  v-show="isAdmin"
-                  dense
-                  round
-                  flat
-                  icon="remove"
-                  :color="$q.dark.isActive ? 'red-13' : 'negative'"
-                  @click="triggerConfirm(removeAdmin, admin)"
-                ></q-btn>
-              </q-item-section>
             </q-item>
           </q-list>
         </q-card-section>
       </q-card>
-      <q-card class="col">
+      <q-card class="col" v-if="0 === visibility">
         <q-card-section>
           <div class="text-h6 text-center">
             {{ $t("projectSettings").guestsPanel }}
@@ -502,9 +491,10 @@ export default {
         this.$store.getters["user/getUserInfos"].super_admin
       );
     },
+    
     isGuest() {
       return this.guests.includes(this.$store.getters["user/getUserInfos"].id);
-    },
+    },  
   },
   methods: {
     /**
