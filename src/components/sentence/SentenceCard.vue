@@ -97,7 +97,7 @@
           dense
           icon="save"
           :disable="tab == '' || !canSave"
-          @click="save('')"
+          @click="save(null)"
         >
           <q-tooltip>Save this tree {{ this.tab }}</q-tooltip>
         </q-btn>
@@ -474,16 +474,21 @@ export default {
 
     for (const [userId, conll] of Object.entries(this.sentence.conlls)) {
       const reactiveSentence = new ReactiveSentence();
+      
       reactiveSentence.fromConll(conll);
       this.reactiveSentencesObj[userId] = reactiveSentence;
       this.hasPendingChanges[userId] = false;
+      
       const metaJSON = reactiveSentence.metaJson;
+
       if(!this.hasSoundUrl && metaJSON.sound_url) {
-        this.conllSoundTree.sound_url = metaJSON.sound_url;
         const treeJSON = reactiveSentence.treeJson;
+
+        this.conllSoundTree.sound_url = metaJSON.sound_url;
         for(const index in treeJSON) {
           const misc = treeJSON[index].MISC;
           const form = treeJSON[index].FORM;
+
           if(misc.AlignBegin && misc.AlignEnd)
             this.conllSoundTree.sound_tree.push([
               form, misc["AlignBegin"], misc["AlignEnd"]
@@ -517,7 +522,13 @@ export default {
           }, 1000);
         });
       }
-    })
+    });
+
+    this.sentenceBus.$on('update:metadata', ({ userId, value }) => {
+      this.save(null, value);
+      this.sentenceBus[userId].metaJson = value;
+      this.conllSoundTree.sound_url = value.sound_url;
+    });
   },
 
   methods: {
@@ -656,7 +667,7 @@ export default {
      *
      * @returns void
      */
-    save(mode) {
+    save(mode, meta = null) {
       const openedTreeUser = this.tab;
       // var conll = this.sentenceBus[currentTreeUser].exportConll();
 
@@ -671,10 +682,14 @@ export default {
         changedConllUser = mode;
       }
 
-      const metaToReplace = {
+      let metaToReplace = {
         user_id: changedConllUser,
-        timestamp: Math.round(Date.now()),
       };
+
+      if (meta) {
+        metaToReplace = meta;
+      }
+      metaToReplace.timestamp = Math.round(Date.now());
 
       const exportedConll = this.reactiveSentencesObj[
         openedTreeUser

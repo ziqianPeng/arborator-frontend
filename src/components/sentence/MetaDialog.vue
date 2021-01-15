@@ -114,6 +114,10 @@ export default {
 
         // TODO : implement META changed (if we really want it to change, 
         // ... because some of META properties are immutable (sent_id, user_id, etc...))
+        this.sentenceBus.$emit('update:metadata', { 
+          userId: this.userId, 
+          value: this.META 
+        });
     },
     informFeatureChanged() {},
   },
