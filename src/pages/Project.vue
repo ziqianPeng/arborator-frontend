@@ -82,7 +82,7 @@
                 ? table.visibleColumnsExerciseMode
                 : table.visibleColumns
             "
-            selection="multiple"
+            :selection="isAdmin || isSuperAdmin ? 'multiple' : 'none'"
             :selected.sync="table.selected"
             :table-header-class="
               $q.dark.isActive ? 'text-white' : 'text-primary'
@@ -107,8 +107,8 @@
                     v-if="isSuperAdmin || isAdmin"
                     :delay="300"
                     content-class="text-white bg-primary"
-                    >{{ $t("projectView").tooltipAddSample }}</q-tooltip
-                  >
+                    >{{ $t("projectView").tooltipAddSample }}
+                  </q-tooltip>
                 </q-btn>
 
                 <div>
@@ -123,7 +123,7 @@
                         !isGuest &&
                         !isAdmin &&
                         !isSuperAdmin) ||
-                      table.selected.length < 1
+                        table.selected.length < 1
                     "
                   ></q-btn>
                   <q-tooltip
@@ -153,7 +153,7 @@
                         !isGuest &&
                         !isAdmin &&
                         !isSuperAdmin) ||
-                      table.selected.length != 1
+                        table.selected.length != 1
                     "
                   ></q-btn>
                   <q-tooltip content-class="text-white bg-primary"
@@ -370,7 +370,7 @@
                     :loading="table.exporting"
                     :disable="
                       (!isGuest && !isAdmin && !isSuperAdmin) ||
-                      table.selected.length < 1
+                        table.selected.length < 1
                     "
                   ></q-btn>
                   <q-tooltip
@@ -453,9 +453,9 @@
                     class="full-width"
                     :to="
                       '/projects/' +
-                      $route.params.projectname +
-                      '/' +
-                      props.row.sample_name
+                        $route.params.projectname +
+                        '/' +
+                        props.row.sample_name
                     "
                     icon-right="open_in_browser"
                     no-caps
@@ -538,6 +538,7 @@
                       v-for="userId in props.row.treesFrom"
                       :key="userId"
                       :props="userId"
+                      class="item-treesfrom"
                     >
                       <q-item-label caption>{{ userId }}</q-item-label>
                     </q-item>
@@ -818,9 +819,11 @@ export default {
     },
 
     isProjectAdmin() {
-      return this.$store.getters["config/isAdmin"] 
-      || this.$store.getters["user/isSuperAdmin"];
-    }
+      return (
+        this.$store.getters["config/isAdmin"] ||
+        this.$store.getters["user/isSuperAdmin"]
+      );
+    },
   },
   created() {
     window.addEventListener("resize", this.handleResize);
@@ -833,12 +836,12 @@ export default {
     this.getUsers();
     this.getProjectSamples();
 
-    document.title = this.$t('projectView').title;
+    document.title = this.$t("projectView").title;
     if (this.$route.query.q && this.$route.query.q.length > 0)
       this.searchDialog = true;
 
     const input = this.$refs.searchInput;
-    
+
     if (input) {
       input.focus();
     }
@@ -857,7 +860,7 @@ export default {
 
     filterFields(tableJson) {
       // to remove some fields from visiblecolumns select options
-      var tempArray = tableJson.fields.filter(function (obj) {
+      var tempArray = tableJson.fields.filter(function(obj) {
         return (
           obj.field !== "syntInfo" &&
           obj.field !== "cat" &&
@@ -1176,12 +1179,16 @@ export default {
 <style lang="stylus">
 .my-sticky-header-table {
   /* max height is important */
+
   .q-table__middle {
     max-height: 70vh;
     min-height: 20vh;
   }
 
-  .q-table__top, .q-table__bottom, thead tr:first-child th { /* bg color is important for th; just specify one */
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th {
+    /* bg color is important for th; just specify one */
     background-color: $grey-1; /* #eeeeee */
   }
 
@@ -1200,7 +1207,10 @@ export default {
     min-height: 20vh;
   }
 
-  .q-table__top, .q-table__bottom, thead tr:first-child th { /* bg color is important for th; just specify one */
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th {
+    /* bg color is important for th; just specify one */
     background-color: $black-1; /* #eeeeee */
   }
 
@@ -1220,5 +1230,16 @@ export default {
 .project-image {
   height: 120px;
   box-shadow: 0px 0px 8px rgb(204 204 204);
+}
+
+.q-table {
+  .q-tr {
+    .q-td {
+      .item-treesfrom {
+        padding-right: 0px;
+        justify-content: flex-end;
+      }
+    }
+  }
 }
 </style>

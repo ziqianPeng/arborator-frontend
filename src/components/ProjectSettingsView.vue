@@ -174,17 +174,6 @@
               v-ripple
             >
               <q-item-section>{{ dut.username }}</q-item-section>
-              <q-item-section side>
-                <q-btn
-                  v-show="isAdmin"
-                  dense
-                  round
-                  flat
-                  icon="remove"
-                  :color="$q.dark.isActive ? 'red-13' : 'negative'"
-                  @click="triggerConfirm(removeDefaultUserTree, dut.id)"
-                ></q-btn>
-              </q-item-section>
             </q-item>
           </q-list>
         </q-card-section>
@@ -230,17 +219,6 @@
           <q-list bordered separator class="list-size">
             <q-item v-for="guest in guests" :key="guest" clickable v-ripple>
               <q-item-section>{{ guest }}</q-item-section>
-              <q-item-section side>
-                <q-btn
-                  v-show="isAdmin"
-                  dense
-                  round
-                  flat
-                  icon="remove"
-                  :color="$q.dark.isActive ? 'red-13' : 'negative'"
-                  @click="triggerConfirm(removeGuest, guest)"
-                ></q-btn>
-              </q-item-section>
             </q-item>
           </q-list>
         </q-card-section>
