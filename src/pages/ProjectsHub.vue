@@ -43,6 +43,7 @@
                 v-model="search"
                 label="Search Project"
                 type="text"
+                ref="searchInput"
                 @input="searchProject(search)"
                 @keyup.enter="searchProject(search)"
               >
@@ -239,6 +240,12 @@ export default {
     this.initLoading = true;
     this.listMode = this.$ls.get("project_view", false);
     this.getProjects();
+
+    const input = this.$refs.searchInput;
+
+    if (input) {
+      input.focus();
+    }
   },
   computed: {
     isLoggedIn() {

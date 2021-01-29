@@ -106,7 +106,7 @@ export default {
   projectHub: {
     tooltipCreaProject: "Créer un nouveau projet",
     tooltipChangeView: "Changer l'affichage",
-    title: "Projets",
+    title: "Projets Arborator-Grew",
     samples: "échantillon(s)",
     rightClickSettings: "Paramètres",
     rightClickDelete: "Supprimer",
