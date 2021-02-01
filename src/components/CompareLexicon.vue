@@ -76,8 +76,6 @@ export default {
       RulesGrew:[],
       currentinfo: '',
       infotochange: '',
-      searchDialog: false,
-      resultSearchDialog:false,
       resultSearch: {},
         table:{
             columns:[
@@ -165,14 +163,14 @@ export default {
               this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})}
               else (
                 this.queries.slice(-1)[0]['pattern'] = pattern_prov, 
-                this.queries.slice(-1)[0]['commands'] = response.data.commands
+                this.queries.slice(-1)[0]['commands'] = response.data.commands,
+                console.log("ici")
               )}
           else {
               this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})
               this.RulesApplied = false;
             }
           })
-        this.searchDialog=true;
         console.log(789789789,this.queries)
         }
       else{this.showNotif('top', 'noRuletoApply');}
