@@ -140,30 +140,64 @@ export default {
     // },
 
     onApplyRules() {
-      // console.log(12121, this.rulesGrew);
-      // console.log("ok");
-      var sampleIds = [];
+      var changedConllUser = this.$store.getters["user/getUserInfos"].username;
+      var sentenceIds = [];
       var objLength = Object.keys(this.samplesFrozen.selected).length;
       // console.log(objLength)
       for (let i = 0; i < objLength; i++){
         if (this.samplesFrozen.selected[i] == true)
-          sampleIds.push(this.samplesFrozen.list[i][1])
+          sentenceIds.push(this.samplesFrozen.list[i][1])
       }
-      console.log(sampleIds)
+      // console.log(sentenceIds)
+      for (let projectname in this.searchresults){
+        for (let sent_id in this.searchresults[projectname]){
+          if (sentenceIds.includes(sent_id) == false){
+            console.log(sent_id)
+            delete this.searchresults[projectname][sent_id]; 
+          }
+          // else{
+          //   var data = {
+          //     sent_id: sent_id,
+          //     conll: JSON.stringify(this.searchresults[projectname][sent_id]["conlls"]),
+          //     user_id: changedConllUser,
+          //   };
+          //   api.updateTree(
+          //     this.$route.params.projectname,
+          //     projectname,
+          //     data
+          //   )
+          //   .then((response) => {
+          //     this.showNotif("top", "saveSuccess");
+          //   })
+          //   .catch((error) => {
+          //     this.$store.dispatch("notifyError", { error: error });
+          //   });
+          // }
+        }
+      }
+      console.log(555,this.searchresults)
       
-      var query = { rules: this.rulesGrew, SampleIds: sampleIds };
-      api
-        .applyRulesProject(this.$route.params.projectname, query)
-        .then((response) => {
-          // this.resultSearchDialog = true;
-          // this.resultSearch = response.data;
-          console.log(response.data)
-        })
-        .catch((error) => {
-          this.$store.dispatch("notifyError", {
-            error: error.response.data.message,
-          });
-        });
+
+      
+      
+    },
+      // var query = { results: this.searchresults, sentenceIds: sentenceIds };
+      // api
+      //   .applyRulesProject(this.$route.params.projectname, query)
+      //   .then((response) => {
+      //     // this.resultSearchDialog = true;
+      //     // this.resultSearch = response.data;
+      //     console.log(response.data)
+      //   })
+      //   .catch((error) => {
+      //     this.$store.dispatch("notifyError", {
+      //       error: error.response.data.message,
+      //     });
+      //   });
+    getProjectSamples() {
+      api.getProjectSamples(this.$route.params.projectname).then((response) => {
+        this.samples = response.data;
+      });
     },
   },
 };
