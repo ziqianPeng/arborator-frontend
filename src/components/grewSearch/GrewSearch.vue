@@ -20,7 +20,6 @@
     <q-dialog v-model="searchDialog" seamless position="right" full-width>
       <GrewRequestCard                   
         :parentOnSearch="onSearch"
-        :parentOnTryRule="onTryRule"
         :parentOnTryRules="onTryRules"
         :grewquery="$route.query.q || ''"
       ></GrewRequestCard>
@@ -111,25 +110,11 @@ export default {
           });
       }
     },
-    onTryRule(searchPattern, rewriteCommands) {
-      console.log(12121, searchPattern, rewriteCommands);
-      var query = { pattern: searchPattern, rewriteCommands: rewriteCommands };
-      api
-        .tryRuleProject(this.$route.params.projectname, query)
-        .then((response) => {
-          this.resultSearchDialog = true;
-          this.resultSearch = response.data;
-        })
-        .catch((error) => {
-          this.$store.dispatch("notifyError", {
-            error: error.response.data.message,
-          });
-        });
-    },
-    onTryRules(searchPattern, rewriteCommands) {
+
+    onTryRules(Rules) {
       // console.log(12121, searchPattern, rewriteCommands);
       // console.log("ok");
-      var query = { pattern: searchPattern, rewriteCommands: rewriteCommands };
+      var query = { rules: Rules };
       api
         .tryRulesProject(this.$route.params.projectname, query)
         .then((response) => {

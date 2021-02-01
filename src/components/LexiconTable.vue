@@ -323,23 +323,17 @@ export default {
         // console.log(123123,datasample)
         api.transformation_grew(this.$route.params.projectname, datasample)
         .then(response => {
-          console.log(444555666,response.data)
-          var pattern_prov = response.data.patterns+response.data.without;
-          this.rules_grew = response.data.tryRules;
+          console.log(444555666,response)
           console.log(888888, this.queries)
-          if ( this.RulesApplied == false ){
-              if ( this.queries.slice(-1)[0]['name'] != 'Correct lexicon'){
-              this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})}
-              else (
-                this.queries.slice(-1)[0]['pattern'] = pattern_prov, 
-                this.queries.slice(-1)[0]['commands'] = response.data.commands
-                )
-            }
-          else {
-              this.queries.push({"name":"Correct lexicon", "pattern":pattern_prov, "commands":response.data.commands})
-              this.RulesApplied = false;
-            }
-          })
+          if ( this.queries.slice(-1)[0]['name'] != 'Correct lexicon'){
+            this.queries.push({"name":"Correct lexicon", "pattern":response.data.rules, "commands":""})
+          }
+          else (
+            this.queries.slice(-1)[0]['pattern'] = response.data.rules, 
+            this.queries.slice(-1)[0]['commands'] = ""
+            )
+          }
+        )
         this.searchDialog=true;
         console.log(789789789,this.queries)
         }

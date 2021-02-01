@@ -368,10 +368,7 @@
                     icon="playlist_add_check"
                     @click="getLexicon()"
                     :loading="table.exporting"
-                    :disable="
-                      (!isGuest && !isAdmin && !isSuperAdmin) ||
-                      table.selected.length < 1
-                    "
+
                   ></q-btn>
                   <q-tooltip
                     v-if="table.selected.length < 1"
