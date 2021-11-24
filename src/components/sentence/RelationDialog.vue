@@ -19,7 +19,6 @@
       ></AttributeTable>
       <!-- @feature-changed="informFeatureChanged()" -->
       <q-space />
-      
 
       <q-card-actions>
         <q-btn
@@ -30,14 +29,14 @@
         />
         <!-- @click="ondialoghide()" -->
         <q-space />
-                      <q-btn
+        <q-btn
           color="negative"
           @click="onDeleteRelation()"
           label="Delete"
           v-close-popup
           style="width: 25%; margin-left: auto"
         />
-      <q-space />
+        <q-space />
         <q-btn
           color="primary"
           @click="onChangeRelation(options.extendedrel)"
@@ -45,7 +44,6 @@
           v-close-popup
           style="width: 25%; margin-left: auto; margin-right: auto"
         />
-
       </q-card-actions>
       <!-- :disabled="!someFeatureChanged" -->
     </q-card>
@@ -172,26 +170,30 @@ export default {
             : ""),
         ""
       );
-      this.dep.DEPREL = newDeprel;
-      this.dep.HEAD = this.gov.ID;
+      if (this.gov.ID === undefined || this.gov.ID === null) {
+        this.dep.DEPREL = "_";
+        this.dep.HEAD = "_";
+      } else {
+        this.dep.DEPREL = newDeprel || "_";
+        this.dep.HEAD = this.gov.ID;
+      }
       this.sentenceBus.$emit("tree-update:token", {
         token: this.dep,
         // gov: this.gov,
-        userId: this.userId
+        userId: this.userId,
       });
     },
     onDeleteRelation() {
-      this.dep.DEPREL = "";
-      this.dep.HEAD = null;
+      this.dep.DEPREL = "_";
+      this.dep.HEAD = "_";
       this.sentenceBus.$emit("tree-update:token", {
         token: this.dep,
         // gov: this.gov,
-        userId: this.userId
+        userId: this.userId,
       });
-    }
+    },
   },
 };
 </script>
 
-<style>
-</style>
+<style></style>
