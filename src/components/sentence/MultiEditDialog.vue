@@ -85,7 +85,7 @@ export default {
         JSON.stringify(this.sentenceBus[this.userId].treeJson)
       );
       for (const metaLabel of this.metaLabels) {
-        this.checkboxesAll[metaLabel] = false
+        this.checkboxesAll[metaLabel] = false;
       }
       for (const token in this.treeJson) {
         const checkboxesToken = {};
@@ -107,7 +107,10 @@ export default {
           var toDeleteBool = this.checkboxes[token][metaLabel];
           if (toDeleteBool) {
             this.treeJson[token][metaLabel] =
-              typeof this.treeJson[token][metaLabel] === "string" ? "_" : NaN;
+              typeof this.treeJson[token][metaLabel] === "string" ? "_" : "_";
+            if (metaLabel === "HEAD") {
+              this.treeJson[token]["DEPREL"] = "_";
+            }
           }
         }
       }
@@ -131,5 +134,4 @@ export default {
   },
 };
 </script>
-<style>
-</style>
+<style></style>
